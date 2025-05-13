@@ -1,0 +1,46 @@
+# Core Flask and Extensions
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+Flask-JWT-Extended==4.5.3
+Flask-SocketIO==5.3.6
+Flask-WTF==1.2.1
+Flask-Uploads==0.2.1
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.23
+alembic==1.12.1
+
+# API and Networking
+requests==2.31.0
+httpx==0.25.1
+python-socketio==5.10.0
+eventlet==0.33.3  # Production WSGI server with WebSocket support
+gunicorn==21.2.0  # Production WSGI server
+
+# File Processing
+PyMuPDF==1.23.7  # For PDF parsing
+python-docx==1.0.1  # For DOCX parsing
+Pillow==10.1.0  # Image processing
+
+# Background Tasks
+celery==5.3.4
+redis==5.0.1
+
+# AI/ML/Speech
+google-generativeai==0.3.1  # Gemini API
+openai-whisper==20231117  # Speech-to-Text
+elevenlabs==0.2.26  # Text-to-Speech
+google-cloud-texttospeech==2.14.1  # Alternative TTS
+
+# Security
+bcrypt==4.0.1
+python-dotenv==1.0.0
+
+# Utilities
+Werkzeug==2.3.7
+Jinja2==3.1.2
+marshmallow==3.20.1
+email-validator==2.1.0
+python-dateutil==2.8.2
