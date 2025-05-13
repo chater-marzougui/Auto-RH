@@ -1,9 +1,13 @@
 import os
-from run import create_app, socketio, db, celery
+from app import create_app, socketio, db, celery
 from app.models import User, Enterprise, Job, Application, Interview, InterviewQuestion, CareerRoadmap, Notification
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get configuration from environment or use default
-app_config = os.environ.get('FLASK_CONFIG') or 'default'
+app_config = os.getenv('FLASK_CONFIG', 'default')
+print(f"Using configuration: {app_config}")
 app = create_app(app_config)
 
 # Context processor to make models available in shell context

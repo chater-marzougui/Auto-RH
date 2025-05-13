@@ -5,7 +5,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User, Enterprise, db
 from datetime import datetime, timedelta, timezone
 import uuid
-from app.utils.decorators import limiter
 import os
 from itsdangerous import URLSafeTimedSerializer
 
@@ -37,7 +36,6 @@ def confirm_verification_token(token, expiration=3600):
         return False, e
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@limiter.limit("10/hour")
 def register():
     if request.method == 'GET':
         return render_template('auth/register.html')
@@ -118,7 +116,6 @@ def verify_email(token):
     return jsonify({'error': 'Account not found'}), 404
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit("20/hour")
 def login():
     if request.method == 'GET':
         return render_template('auth/login.html')
@@ -193,7 +190,6 @@ def refresh():
     return jsonify({'access_token': access_token}), 200
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
-@limiter.limit("5/hour")
 def forgot_password():
     if request.method == 'GET':
         return render_template('auth/forgot_password.html')

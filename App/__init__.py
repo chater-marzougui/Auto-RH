@@ -20,7 +20,7 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     
     # Load configuration
-    app.config.from_object(config[config_name])
+    app.config.from_object(config.config[config_name])
     
     # Ensure upload directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -35,13 +35,13 @@ def create_app(config_name='default'):
     celery.conf.update(app.config)
     
     # Register blueprints
-    from app.routes.auth import auth as auth_blueprint
+    from app.routes.auth import auth_bp as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/api/auth')
     
     from app.routes.user import user as user_blueprint
     app.register_blueprint(user_blueprint, url_prefix='/api/user')
     
-    from app.routes.entreprise import enterprise as enterprise_blueprint
+    from app.routes.entreprise import enterprise_bp as enterprise_blueprint
     app.register_blueprint(enterprise_blueprint, url_prefix='/api/enterprise')
     
     from app.routes.interview import interview as interview_blueprint

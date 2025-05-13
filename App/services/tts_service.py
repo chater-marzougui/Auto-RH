@@ -19,15 +19,15 @@ import tempfile
 class TTSService:
     """Service for Text-to-Speech conversion using various providers."""
     
-    def __init__(self, provider="elevenlabs"):
+    def __init__(self, elevenlabs_api_key, google_api_key, provider="elevenlabs"):
         """Initialize the TTS service.
         
         Args:
             provider: The TTS provider to use ('elevenlabs' or 'google')
         """
         self.provider = provider
-        self.elevenlabs_api_key = os.environ.get('ELEVENLABS_API_KEY') or current_app.config.get('ELEVENLABS_API_KEY')
-        self.google_api_key = os.environ.get('GOOGLE_API_KEY') or current_app.config.get('GOOGLE_API_KEY')
+        self.elevenlabs_api_key = elevenlabs_api_key
+        self.google_api_key = google_api_key
         
         # Default voice settings
         self.default_elevenlabs_voice = "Adam"  # Default ElevenLabs voice ID
