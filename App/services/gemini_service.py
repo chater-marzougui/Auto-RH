@@ -9,8 +9,8 @@ This module provides functions to interact with the Gemini API for:
 """
 import os
 import json
-import requests
 from flask import current_app
+import google.generativeai as genai
 from typing import Dict, List, Tuple, Any, Optional
 
 
@@ -18,12 +18,11 @@ class GeminiService:
     def __init__(self, api_key=None):
         """Initialize the Gemini service with API key."""
         self.api_key = api_key or os.environ.get('GEMINI_API_KEY') or current_app.config.get('GEMINI_API_KEY')
-        self.api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
         
         if not self.api_key:
             raise ValueError("Gemini API key not provided and not found in environment or app config")
     
-    def _make_request(self, prompt: str, parameters: Dict = None) -> Dict:
+    def _make_request(self, prompt: str, parameters: Dict = None, system_prompt: str = "") -> str:
         """Make a request to the Gemini API.
         
         Args:
@@ -36,34 +35,20 @@ class GeminiService:
         if parameters is None:
             parameters = {
                 "temperature": 0.7,
-                "topP": 0.8,
-                "topK": 40,
-                "maxOutputTokens": 1024,
+                "top_p": 0.8,
+                "top_k": 40,
+                "max_output_tokens": 8192,
             }
         
-        headers = {
-            "Content-Type": "application/json",
-            "x-goog-api-key": self.api_key
-        }
-        
-        data = {
-            "contents": [{
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }],
-            "generationConfig": parameters
-        }
-        
-        response = requests.post(
-            self.api_url, 
-            headers=headers,
-            json=data
-        )
-        
-        if response.status_code != 200:
-            raise requests.exceptions.HTTPError(f"API request failed with status {response.status_code}: {response.text}")
-        
-        return response.json()
+        model = genai.GenerativeModel(
+                model_name="gemini-2.0-flash-exp",
+                generation_config=parameters,
+                system_instruction=system_prompt,
+            )
+        chat_session = model.start_chat(history=[])
+        response = chat_session.send_message(prompt).text
+
+        return response
 
     def parse_cv(self, cv_text: str) -> Dict:
         """Extract skills, experiences, and qualifications from a CV.
@@ -74,6 +59,8 @@ class GeminiService:
         Returns:
             Dictionary containing parsed CV information
         """
+        system_prompt = "You are a highly skilled HR professional with expertise in CV parsing and analysis."
+        
         prompt = f"""
         Analyze the following CV and extract key information in JSON format:
         
@@ -97,9 +84,10 @@ class GeminiService:
         # Use stricter parameters for CV parsing to ensure accuracy
         parameters = {
             "temperature": 0.2,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 2048,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 4096,
+            "response_mime_type": "response_mime_type"
         }
         
         response = self._make_request(prompt, parameters)
@@ -113,10 +101,10 @@ class GeminiService:
             
             if start_idx >= 0 and end_idx > start_idx:
                 json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
+                return json.load(json_str)
             else:
                 # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+                return json.load(text_content)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing CV response: {e}")
             return {
@@ -175,27 +163,15 @@ class GeminiService:
         
         parameters = {
             "temperature": 0.7,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 4096,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 4096,
         }
         
         response = self._make_request(prompt, parameters)
         
         try:
-            # Extract the content from the API response
-            text_content = response["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON array
-            start_idx = text_content.find('[')
-            end_idx = text_content.rfind(']') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+            return json.load(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing questions response: {e}")
             return [{"question_text": "Could not generate questions. Please try again.", 
@@ -247,33 +223,22 @@ class GeminiService:
         
         parameters = {
             "temperature": 0.3,  # Lower temperature for more consistent scoring
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 2048,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 2048,
         }
         
-        response_data = self._make_request(prompt, parameters)
+        response = self._make_request(prompt, parameters)
         
         try:
-            # Extract the content from the API response
-            text_content = response_data["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON object
-            start_idx = text_content.find('{')
-            end_idx = text_content.rfind('}') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+            return json.load(response)
+
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing analysis response: {e}")
             return {
                 "score": 5,
                 "error": "Failed to analyze response",
-                "raw_response": str(response_data)
+                "raw_response": response
             }
 
     def generate_interview_summary(self, transcript: str, job_description: str = None, 
@@ -321,27 +286,15 @@ class GeminiService:
         
         parameters = {
             "temperature": 0.4,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 4096,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 4096,
         }
         
         response = self._make_request(prompt, parameters)
         
         try:
-            # Extract the content from the API response
-            text_content = response["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON object
-            start_idx = text_content.find('{')
-            end_idx = text_content.rfind('}') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+            json.load(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing summary response: {e}")
             return {
@@ -394,32 +347,20 @@ class GeminiService:
         
         parameters = {
             "temperature": 0.6,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 4096,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 4096,
         }
         
         response = self._make_request(prompt, parameters)
         
         try:
-            # Extract the content from the API response
-            text_content = response["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON object
-            start_idx = text_content.find('{')
-            end_idx = text_content.rfind('}') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+            return json.load(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing career advice response: {e}")
             return {
                 "error": "Failed to generate career advice",
-                "raw_response": str(response)
+                "raw_response": response
             }
 
     def analyze_cv_for_job(self, cv_data: Dict, job_description: str) -> Dict:
@@ -459,27 +400,15 @@ class GeminiService:
         
         parameters = {
             "temperature": 0.3,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 2048,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 2048,
         }
         
         response = self._make_request(prompt, parameters)
         
         try:
-            # Extract the content from the API response
-            text_content = response["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON object
-            start_idx = text_content.find('{')
-            end_idx = text_content.rfind('}') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+            return json.load(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing CV job analysis response: {e}")
             return {
@@ -541,27 +470,15 @@ class GeminiService:
         
         parameters = {
             "temperature": 0.7,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 1024,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 1024,
         }
         
         response = self._make_request(prompt, parameters)
         
         try:
-            # Extract the content from the API response
-            text_content = response["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON object
-            start_idx = text_content.find('{')
-            end_idx = text_content.rfind('}') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.loads(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.loads(text_content)
+            return json.load(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing follow-up question response: {e}")
             return {
