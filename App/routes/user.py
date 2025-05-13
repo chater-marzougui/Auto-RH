@@ -13,6 +13,7 @@ from app.models import User
 from app.utils.file_parser import save_uploaded_file, parse_cv, FileUploadError
 
 user = Blueprint('user', __name__)
+notFoundErrorStr = "User not found"
 
 @user.route('/profile', methods=['GET'])
 @jwt_required()
@@ -22,7 +23,7 @@ def get_profile():
     user = User.query.get(user_id)
     
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": notFoundErrorStr}), 404
     
     profile_data = user.profile_data or {}
     
@@ -43,7 +44,7 @@ def update_profile():
     user = User.query.get(user_id)
     
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": notFoundErrorStr}), 404
     
     data = request.json
     
@@ -83,7 +84,7 @@ def upload_cv():
     user = User.query.get(user_id)
     
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": notFoundErrorStr}), 404
     
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
@@ -141,7 +142,7 @@ def get_user_cvs():
     user = User.query.get(user_id)
     
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": notFoundErrorStr}), 404
     
     profile_data = user.profile_data or {}
     

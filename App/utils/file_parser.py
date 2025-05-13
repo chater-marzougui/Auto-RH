@@ -94,7 +94,7 @@ def extract_text_from_file(file_path):
             current_app.logger.error(f"Error reading text file: {str(e)}")
             raise FileUploadError(f"Failed to read text file: {str(e)}")
     else:
-        raise FileUploadError(f"Unsupported file format for text extraction")
+        raise FileUploadError("Unsupported file format for text extraction")
 
 def extract_skills_from_text(text):
     """
@@ -151,7 +151,7 @@ def extract_education_from_text(text):
     ]
     
     # Pattern to find education sections (can be refined further)
-    education_section = re.search(r'(?i)(education|qualifications|academic background).*?(?=employment|experience|skills|$)', 
+    education_section = re.search(r'(?i)(education|qualifications|academic background).*(?=employment|experience|skills|$)', 
                                  text, re.DOTALL)
     
     if education_section:
@@ -193,38 +193,49 @@ def extract_experience_from_text(text):
     experience = []
     
     # Pattern to find experience sections
-    experience_section = re.search(r'(?i)(experience|employment|work history|professional background).*?(?=education|skills|projects|$)', 
+    experience_section = re.search(r'(?i)(experience|employment|work history|professional background).*(?=education|skills|projects|$)', 
                                   text, re.DOTALL)
     
-    if experience_section:
-        exp_text = experience_section.group(0)
+    if not experience_section:
+        return experience
+
+    exp_text = experience_section.group(0)
+    
+    # Split by potential job entries (can be refined)
+    job_entries = re.split(r'\n\n+', exp_text)
+    
+    for entry in job_entries:
+        if len(entry.strip()) < 10:  # Skip very short entries
+            continue
+            
+        # Try to extract job title
+        title_match = re.search(r'(?i)(senior|junior|lead|principal|software|developer|engineer|manager|director|analyst|consultant|specialist|coordinator)\s+[\w\s]+', entry)
+        title = title_match.group(0) if title_match else ''
         
-        # Split by potential job entries (can be refined)
-        job_entries = re.split(r'\n\n+', exp_text)
+        # Try to extract company name
+        company_match = re.search(r'(?:at|with|for)\s+([\w\s]+)', entry)
+        company = company_match.group(1) if company_match else ''
         
-        for entry in job_entries:
-            if len(entry.strip()) < 10:  # Skip very short entries
-                continue
-                
-            # Try to extract job title
-            title_match = re.search(r'(?i)(senior|junior|lead|principal|software|developer|engineer|manager|director|analyst|consultant|specialist|coordinator)\s+[\w\s]+', entry)
-            title = title_match.group(0) if title_match else ''
-            
-            # Try to extract company name
-            company_match = re.search(r'(?:at|with|for)\s+([\w\s]+)', entry)
-            company = company_match.group(1) if company_match else ''
-            
-            # Try to extract dates
-            dates_pattern = r'((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}\s*-\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}\s*-\s*(?:Present|Current)|(?:19|20)\d{2}\s*-\s*(?:19|20)\d{2}|(?:19|20)\d{2}\s*-\s*(?:Present|Current))'
-            dates_match = re.search(dates_pattern, entry, re.IGNORECASE)
-            dates = dates_match.group(0) if dates_match else ''
-            
-            experience.append({
-                'title': title.strip(),
-                'company': company.strip(),
-                'period': dates.strip(),
-                'raw_text': entry.strip()
-            })
+        # Try to extract dates using simpler, sequential patterns
+        date_patterns = [
+            r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}\s*-\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}',
+            r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}\s*-\s*(Present|Current)',
+            r'(19|20)\d{2}\s*-\s*(19|20)\d{2}',
+            r'(19|20)\d{2}\s*-\s*(Present|Current)'
+        ]
+        dates = ''
+        for pattern in date_patterns:
+            dates_match = re.search(pattern, entry, re.IGNORECASE)
+            if dates_match:
+                dates = dates_match.group(0)
+                break
+        
+        experience.append({
+            'title': title.strip(),
+            'company': company.strip(),
+            'period': dates.strip(),
+            'raw_text': entry.strip()
+        })
     
     return experience
 
