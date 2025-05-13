@@ -41,7 +41,7 @@ def create_app(config_name='default'):
     from app.routes.user import user as user_blueprint
     app.register_blueprint(user_blueprint, url_prefix='/api/user')
     
-    from app.routes.enterprise import enterprise as enterprise_blueprint
+    from app.routes.entreprise import enterprise as enterprise_blueprint
     app.register_blueprint(enterprise_blueprint, url_prefix='/api/enterprise')
     
     from app.routes.interview import interview as interview_blueprint
@@ -53,7 +53,7 @@ def create_app(config_name='default'):
     from app.routes.job import job as job_blueprint
     app.register_blueprint(job_blueprint, url_prefix='/api/job')
     
-    from app.routes.career import career as career_blueprint
+    from app.routes.careur import career as career_blueprint
     app.register_blueprint(career_blueprint, url_prefix='/api/career')
     
     # Register main blueprint for home routes

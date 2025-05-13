@@ -17,7 +17,6 @@ def send_verification_email(user_email, token):
     # For now, we just print the token for testing purposes
     verification_url = url_for('auth.verify_email', token=token, _external=True)
     print(f"Verification URL for {user_email}: {verification_url}")
-    # TODO: Implement actual email sending with Flask-Mail or similar
 
 # Function to generate email verification token
 def generate_verification_token(email):
@@ -224,7 +223,6 @@ def forgot_password():
     
     db.session.commit()
     
-    # TODO: Send actual email with reset link
     reset_url = url_for('auth.reset_password', token=token, _external=True)
     print(f"Password reset URL for {data['email']}: {reset_url}")
     

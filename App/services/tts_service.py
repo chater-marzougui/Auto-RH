@@ -108,7 +108,7 @@ class TTSService:
         
         if response.status_code != 200:
             current_app.logger.error(f"ElevenLabs API error: {response.status_code} - {response.text}")
-            raise Exception(f"ElevenLabs API error: {response.status_code}")
+            raise requests.exceptions.HTTPError(f"ElevenLabs API error: {response.status_code}")
         
         # Save to cache
         with open(cache_file, 'wb') as f:
@@ -174,7 +174,7 @@ class TTSService:
         
         if response.status_code != 200:
             current_app.logger.error(f"Google TTS API error: {response.status_code} - {response.text}")
-            raise Exception(f"Google TTS API error: {response.status_code}")
+            raise requests.exceptions.HTTPError(f"Google TTS API error: {response.status_code}")
         
         # Decode the base64 audio content
         audio_content = base64.b64decode(response.json()["audioContent"])

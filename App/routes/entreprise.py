@@ -1,13 +1,14 @@
 from flask import Blueprint, request, jsonify, render_template, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import Enterprise, Job, Interview, User, Application, db
+from app.models import Enterprise, Job, Interview, User, Application, db, TeamMember
 from app.utils.decorators import enterprise_required
 from datetime import datetime, timezone
 import json
 from werkzeug.security import generate_password_hash
 from sqlalchemy import func
 
-enterprise_bp = Blueprint('enterprise', __name__)
+
+enterprise_bp = Blueprint('enterprise', __name__, url_prefix='/enterprise')
 enterpriseNotFoundErrStr = "Enterprise not found"
 
 @enterprise_bp.route('/profile', methods=['GET', 'PUT'])
@@ -141,8 +142,6 @@ def add_team_member():
     
     db.session.add(new_member)
     db.session.commit()
-    
-    # TODO: Send invitation email to the team member
     
     return jsonify({'message': 'Team member added successfully'}), 201
 

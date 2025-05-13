@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
+userIdStr = 'users.id'
 
 class User(db.Model):
     """User model for job seekers."""
@@ -32,6 +33,31 @@ class User(db.Model):
     
     def __repr__(self):
         return f'<User {self.name}>'
+    
+
+class TeamMember(db.Model):
+    """Team member model for enterprises."""
+    __tablename__ = 'team_members'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(db.String(20), default='member', nullable=False)  # 'member', 'admin'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprises.id'), nullable=False)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<TeamMember {self.name}>'
 
 
 class Enterprise(db.Model):
@@ -96,7 +122,7 @@ class Application(db.Model):
     __tablename__ = 'applications'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(userIdStr), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
     cv_path = db.Column(db.String(255), nullable=True)  # Path to CV file
     cover_letter = db.Column(db.Text, nullable=True)
@@ -116,7 +142,7 @@ class Interview(db.Model):
     __tablename__ = 'interviews'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(userIdStr), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=True)  # Can be NULL for general assessments
     scheduled_time = db.Column(db.DateTime, nullable=True)
     start_time = db.Column(db.DateTime, nullable=True)
@@ -159,7 +185,7 @@ class CareerRoadmap(db.Model):
     __tablename__ = 'career_roadmaps'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(userIdStr), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     goals = db.Column(JSONB, nullable=True)  # Career goals
@@ -179,7 +205,7 @@ class Notification(db.Model):
     __tablename__ = 'notifications'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(userIdStr), nullable=False)
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False)
     notification_type = db.Column(db.String(50), nullable=False)  # 'interview', 'application', 'feedback', 'job_match'

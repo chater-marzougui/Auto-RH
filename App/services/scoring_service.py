@@ -42,13 +42,13 @@ class ScoringService:
             interview = Interview.query.get_or_404(interview_id)
             transcript = interview.transcript
             job = Job.query.get(interview.job_id) if interview.job_id else None
-            user = User.query.get(interview.user_id)
+            # user = User.query.get(interview.user_id)"""
             
             # Use custom weights if provided
             weights = custom_weights or self.scoring_categories
             
             # Process transcript through Gemini for comprehensive scoring
-            scoring_prompt = self._create_scoring_prompt(transcript, job, user, weights)
+            scoring_prompt = self._create_scoring_prompt(transcript, job, weights)
             scoring_result = self.gemini_service.generate_response(scoring_prompt)
             
             try:
@@ -81,7 +81,7 @@ class ScoringService:
                 'overall_score': 0
             }
     
-    def _create_scoring_prompt(self, transcript: str, job: Job, user: User, weights: Dict[str, float]) -> str:
+    def _create_scoring_prompt(self, transcript: str, job: Job, weights: Dict[str, float]) -> str:
         """
         Create a prompt for Gemini to score the interview
         

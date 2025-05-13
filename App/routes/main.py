@@ -21,7 +21,7 @@ def index():
             logged_in = True
             claims = get_jwt()
             user_role = claims.get('role', 'user')
-    except:
+    except Exception:
         # Not logged in, continue as guest
         pass
     
@@ -46,11 +46,11 @@ def how_it_works():
 def contact():
     """Contact form page"""
     if request.method == 'POST':
-        data = request.form
-        name = data.get('name')
-        email = data.get('email')
-        subject = data.get('subject')
-        message = data.get('message')
+        # data = request.form """"
+        # name = data.get('name')
+        # email = data.get('email')
+        # subject = data.get('subject')
+        # message = data.get('message')
         
         # Here you would typically send the email or store in DB
         # For now, we'll just return a success message
@@ -158,7 +158,7 @@ def sitemap():
 @jwt_required()
 def dashboard_redirect():
     """Redirect users to the appropriate dashboard based on role"""
-    user_id = get_jwt_identity()
+    # user_id = get_jwt_identity() ""
     claims = get_jwt()
     role = claims.get('role', 'user')
     

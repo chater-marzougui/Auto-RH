@@ -4,9 +4,9 @@ from app.models import User, Interview, Application, CareerRoadmap, Enterprise, 
 from app.services.scoring_service import get_user_assessment_summary
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from app import db
 
 dashboard = Blueprint('dashboard', __name__)
-db = current_app.extensions['db']
 
 # User Dashboard Routes
 @dashboard.route('/user/dashboard', methods=['GET'])

@@ -1,5 +1,5 @@
 import os
-from app import create_app, socketio, db, celery
+from run import create_app, socketio, db, celery
 from app.models import User, Enterprise, Job, Application, Interview, InterviewQuestion, CareerRoadmap, Notification
 
 # Get configuration from environment or use default

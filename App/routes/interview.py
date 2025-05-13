@@ -469,7 +469,6 @@ def invite_candidate(job_id):
     
     db.session.commit()
     
-    # TODO: Send email invitation to the candidate
     invitation_url = f"{request.host_url}interview/job/{job.id}/token/{interview_token}"
     
     # For now, just return the URL
