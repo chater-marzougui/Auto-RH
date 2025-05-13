@@ -18,10 +18,10 @@ class GeminiService:
     def __init__(self, api_key=None):
         """Initialize the Gemini service with API key."""
         self.api_key = api_key or os.environ.get('GEMINI_API_KEY') or current_app.config.get('GEMINI_API_KEY')
-        
+
         if not self.api_key:
             raise ValueError("Gemini API key not provided and not found in environment or app config")
-    
+
     def _make_request(self, prompt: str, parameters: Dict = None, system_prompt: str = "") -> str:
         """Make a request to the Gemini API.
         
@@ -39,12 +39,12 @@ class GeminiService:
                 "top_k": 40,
                 "max_output_tokens": 8192,
             }
-        
+
         model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash-exp",
-                generation_config=parameters,
-                system_instruction=system_prompt,
-            )
+            model_name="gemini-2.0-flash-exp",
+            generation_config=parameters,
+            system_instruction=system_prompt,
+        )
         chat_session = model.start_chat(history=[])
         response = chat_session.send_message(prompt).text
 
@@ -60,7 +60,7 @@ class GeminiService:
             Dictionary containing parsed CV information
         """
         system_prompt = "You are a highly skilled HR professional with expertise in CV parsing and analysis."
-        
+
         prompt = f"""
         Analyze the following CV and extract key information in JSON format:
         
@@ -80,7 +80,7 @@ class GeminiService:
         
         Return ONLY the JSON object without any additional text.
         """
-        
+
         # Use stricter parameters for CV parsing to ensure accuracy
         parameters = {
             "temperature": 0.2,
@@ -89,22 +89,10 @@ class GeminiService:
             "max_output_tokens": 4096,
             "response_mime_type": "response_mime_type"
         }
-        
+
         response = self._make_request(prompt, parameters)
         try:
-            # Extract the content from the API response
-            text_content = response["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Find and extract the JSON object
-            start_idx = text_content.find('{')
-            end_idx = text_content.rfind('}') + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = text_content[start_idx:end_idx]
-                return json.load(json_str)
-            else:
-                # If we can't find JSON markers, try to parse the whole thing
-                return json.load(text_content)
+            return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing CV response: {e}")
             return {
@@ -112,10 +100,10 @@ class GeminiService:
                 "raw_response": str(response)
             }
 
-    def generate_interview_questions(self, job_description: str, cv_data: Dict = None, 
-                                    custom_questions: List[str] = None, 
-                                    personality_focus: str = None,
-                                    num_questions: int = 10) -> List[Dict]:
+    def generate_interview_questions(self, job_description: str, cv_data: Dict = None,
+                                     custom_questions: List[str] = None,
+                                     personality_focus: str = None,
+                                     num_questions: int = 10) -> List[Dict]:
         """Generate interview questions based on job description and CV.
         
         Args:
@@ -133,21 +121,21 @@ class GeminiService:
             f"Generate {num_questions} interview questions for the following job description:",
             f"\nJOB DESCRIPTION:\n{job_description}\n"
         ]
-        
+
         if cv_data:
             cv_json = json.dumps(cv_data, indent=2)
             prompt_parts.append(f"\nCANDIDATE CV DATA:\n{cv_json}\n")
             prompt_parts.append("Tailor some questions to verify the candidate's claimed skills and experience.")
-        
+
         if custom_questions:
             questions_text = "\n".join([f"- {q}" for q in custom_questions])
             prompt_parts.append(f"\nMUST-ASK QUESTIONS:\n{questions_text}\n")
             prompt_parts.append("Include these questions in your output.")
-        
+
         if personality_focus:
             prompt_parts.append(f"\nPERSONALITY FOCUS:\n{personality_focus}\n")
             prompt_parts.append("Include questions that assess these personality traits.")
-        
+
         prompt_parts.append("""
         Return the questions as a JSON array where each question is an object with:
         1. "question_text": The actual question
@@ -158,28 +146,28 @@ class GeminiService:
         
         Return ONLY the JSON array without any additional text.
         """)
-        
+
         prompt = "\n".join(prompt_parts)
-        
+
         parameters = {
             "temperature": 0.7,
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 4096,
         }
-        
+
         response = self._make_request(prompt, parameters)
-        
+
         try:
-            return json.load(response)
+            return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing questions response: {e}")
-            return [{"question_text": "Could not generate questions. Please try again.", 
+            return [{"question_text": "Could not generate questions. Please try again.",
                      "error": str(e)}]
-    
-    def analyze_interview_response(self, question: str, response: str, 
-                                  expected_points: List[str] = None,
-                                  job_description: str = None) -> Dict:
+
+    def analyze_interview_response(self, question: str, response: str,
+                                   expected_points: List[str] = None,
+                                   job_description: str = None) -> Dict:
         """Analyze a candidate's response to an interview question.
         
         Args:
@@ -196,14 +184,14 @@ class GeminiService:
             f"\nQUESTION:\n{question}\n",
             f"\nCANDIDATE RESPONSE:\n{response}\n",
         ]
-        
+
         if expected_points:
             points_text = "\n".join([f"- {p}" for p in expected_points])
             prompt_parts.append(f"\nEXPECTED ANSWER POINTS:\n{points_text}\n")
-        
+
         if job_description:
             prompt_parts.append(f"\nJOB DESCRIPTION CONTEXT:\n{job_description}\n")
-        
+
         prompt_parts.append("""
         Analyze the response and return a JSON object with:
         1. "score": Numerical score from 1-10
@@ -218,20 +206,20 @@ class GeminiService:
         
         Return ONLY the JSON object without any additional text.
         """)
-        
+
         prompt = "\n".join(prompt_parts)
-        
+
         parameters = {
             "temperature": 0.3,  # Lower temperature for more consistent scoring
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 2048,
         }
-        
+
         response = self._make_request(prompt, parameters)
-        
+
         try:
-            return json.load(response)
+            return json.loads(response)
 
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing analysis response: {e}")
@@ -241,8 +229,8 @@ class GeminiService:
                 "raw_response": response
             }
 
-    def generate_interview_summary(self, transcript: str, job_description: str = None, 
-                                  cv_data: Dict = None) -> Dict:
+    def generate_interview_summary(self, transcript: str, job_description: str = None,
+                                   cv_data: Dict = None) -> Dict:
         """Generate a summary and overall assessment of an interview.
         
         Args:
@@ -257,15 +245,15 @@ class GeminiService:
             "Generate a comprehensive assessment of the following job interview:",
             f"\nINTERVIEW TRANSCRIPT:\n{transcript}\n",
         ]
-        
+
         if job_description:
             prompt_parts.append(f"\nJOB DESCRIPTION:\n{job_description}\n")
-        
+
         if cv_data:
-            cv_summary = json.dumps({k: cv_data[k] for k in ['skills', 'experience', 'education'] 
-                                    if k in cv_data}, indent=2)
+            cv_summary = json.dumps({k: cv_data[k] for k in ['skills', 'experience', 'education']
+                                     if k in cv_data}, indent=2)
             prompt_parts.append(f"\nCANDIDATE BACKGROUND:\n{cv_summary}\n")
-        
+
         prompt_parts.append("""
         Provide a detailed assessment in JSON format with:
         1. "overall_score": Numerical score from 1-100
@@ -281,20 +269,20 @@ class GeminiService:
         
         Return ONLY the JSON object without any additional text.
         """)
-        
+
         prompt = "\n".join(prompt_parts)
-        
+
         parameters = {
             "temperature": 0.4,
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 4096,
         }
-        
+
         response = self._make_request(prompt, parameters)
-        
+
         try:
-            json.load(response)
+            json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing summary response: {e}")
             return {
@@ -303,8 +291,8 @@ class GeminiService:
                 "error": str(e)
             }
 
-    def generate_career_advice(self, cv_data: Dict, career_interests: List[str], 
-                              personality_traits: List[str] = None) -> Dict:
+    def generate_career_advice(self, cv_data: Dict, career_interests: List[str],
+                               personality_traits: List[str] = None) -> Dict:
         """Generate career advice and roadmap based on CV and interests.
         
         Args:
@@ -317,17 +305,17 @@ class GeminiService:
         """
         cv_json = json.dumps(cv_data, indent=2)
         interests_text = ", ".join(career_interests)
-        
+
         prompt_parts = [
             "Generate personalized career advice and a roadmap based on the following information:",
             f"\nCV DATA:\n{cv_json}\n",
             f"\nCAREER INTERESTS/GOALS:\n{interests_text}\n",
         ]
-        
+
         if personality_traits:
             traits_text = ", ".join(personality_traits)
             prompt_parts.append(f"\nPERSONALITY TRAITS:\n{traits_text}\n")
-        
+
         prompt_parts.append("""
         Provide career advice in JSON format with:
         1. "suitable_roles": List of 3-5 suitable roles with brief explanations of fit
@@ -342,20 +330,20 @@ class GeminiService:
         
         Return ONLY the JSON object without any additional text.
         """)
-        
+
         prompt = "\n".join(prompt_parts)
-        
+
         parameters = {
             "temperature": 0.6,
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 4096,
         }
-        
+
         response = self._make_request(prompt, parameters)
-        
+
         try:
-            return json.load(response)
+            return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing career advice response: {e}")
             return {
@@ -374,7 +362,7 @@ class GeminiService:
             Dictionary with analysis results
         """
         cv_json = json.dumps(cv_data, indent=2)
-        
+
         prompt = f"""
         Analyze how well the following CV matches the job description:
         
@@ -397,18 +385,18 @@ class GeminiService:
         
         Return ONLY the JSON object without any additional text.
         """
-        
+
         parameters = {
             "temperature": 0.3,
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 2048,
         }
-        
+
         response = self._make_request(prompt, parameters)
-        
+
         try:
-            return json.load(response)
+            return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing CV job analysis response: {e}")
             return {
@@ -417,10 +405,10 @@ class GeminiService:
                 "raw_response": str(response)
             }
 
-    def generate_follow_up_question(self, interview_context: Dict, 
-                                   previous_questions: List[str], 
-                                   previous_responses: List[str],
-                                   job_description: str = None) -> Dict:
+    def generate_follow_up_question(self, interview_context: Dict,
+                                    previous_questions: List[str],
+                                    previous_responses: List[str],
+                                    job_description: str = None) -> Dict:
         """Generate a dynamic follow-up question based on the interview context.
         
         Args:
@@ -438,18 +426,18 @@ class GeminiService:
             qa_history.append(f"Q: {previous_questions[i]}")
             qa_history.append(f"A: {previous_responses[i]}")
         qa_history_text = "\n".join(qa_history)
-        
+
         context_json = json.dumps(interview_context, indent=2)
-        
+
         prompt_parts = [
             "Generate a relevant follow-up interview question based on the conversation history:",
             f"\nINTERVIEW CONTEXT:\n{context_json}\n",
             f"\nCONVERSATION HISTORY:\n{qa_history_text}\n",
         ]
-        
+
         if job_description:
             prompt_parts.append(f"\nJOB DESCRIPTION:\n{job_description}\n")
-        
+
         prompt_parts.append("""
         Based on the previous questions and answers, generate a follow-up question that:
         1. Probes deeper into an area where the candidate's response was insufficient
@@ -465,20 +453,20 @@ class GeminiService:
         
         Return ONLY the JSON object without any additional text.
         """)
-        
+
         prompt = "\n".join(prompt_parts)
-        
+
         parameters = {
             "temperature": 0.7,
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 1024,
         }
-        
+
         response = self._make_request(prompt, parameters)
-        
+
         try:
-            return json.load(response)
+            return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing follow-up question response: {e}")
             return {
