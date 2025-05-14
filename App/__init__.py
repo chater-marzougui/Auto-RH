@@ -26,6 +26,7 @@ def create_app(config_name='default'):
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
     # Initialize extensions with app
+    print("Initializing database...")
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)

@@ -27,4 +27,4 @@ def make_shell_context():
 
 if __name__ == '__main__':
     # Use SocketIO to run the app instead of app.run()
-    socketio.run(app, debug=app.config['DEBUG'], host='0.0.0.0')
+    socketio.run(app, debug=app.config['DEBUG'], host='127.0.0.1', port=5000)
