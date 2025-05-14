@@ -21,9 +21,9 @@ load_dotenv()
 
 class GeminiService:
     def __init__(self, api_key: str=None) -> None:
-        load_dotenv()
+        # load_dotenv()
         """Initialize the Gemini service with API key."""
-        self.api_key = api_key or os.environ.get('GEMINI_API_KEY') or current_app.config.get('GEMINI_API_KEY')
+        self.api_key = api_key or os.environ.get('GEMINI_API_KEY')
         if not self.api_key:
             raise ValueError("Gemini API key not provided and not found in environment or app config")
 
