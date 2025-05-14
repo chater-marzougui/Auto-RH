@@ -1,0 +1,138 @@
+{
+  "cv_data": {
+    "personal_info": {
+      "name": "Jordan Smith",
+      "email": "jordan.smith@example.com",
+      "phone": "+1 (555) 123-4567",
+      "location": "San Francisco, CA"
+    },
+    "skills": [
+      "Python",
+      "JavaScript",
+      "React",
+      "Node.js",
+      "SQL",
+      "MongoDB",
+      "Docker",
+      "AWS",
+      "Machine Learning",
+      "Data Analysis",
+      "Project Management",
+      "Agile Methodologies",
+      "CI/CD",
+      "Git",
+      "REST APIs"
+    ],
+    "experience": [
+      {
+        "company": "TechCorp Solutions",
+        "role": "Senior Software Engineer",
+        "duration": "Jan 2020 - Present",
+        "achievements": [
+          "Led a team of 5 developers to build a microservices architecture",
+          "Reduced API response time by 40% through performance optimization",
+          "Implemented CI/CD pipeline that reduced deployment time by 60%",
+          "Migrated legacy systems to cloud-based infrastructure"
+        ]
+      },
+      {
+        "company": "DataViz Inc.",
+        "role": "Software Developer",
+        "duration": "Mar 2017 - Dec 2019",
+        "achievements": [
+          "Developed data visualization dashboard used by 50+ enterprise clients",
+          "Built RESTful APIs connecting frontend to backend services",
+          "Created automated testing framework that increased code coverage by 30%"
+        ]
+      },
+      {
+        "company": "Startup Innovations",
+        "role": "Junior Developer",
+        "duration": "Jun 2015 - Feb 2017",
+        "achievements": [
+          "Contributed to web application serving 10,000+ daily users",
+          "Implemented user authentication and authorization system",
+          "Assisted in database design and optimization"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "institution": "University of California, Berkeley",
+        "degree": "M.S. in Computer Science",
+        "duration": "2013 - 2015"
+      },
+      {
+        "institution": "Stanford University",
+        "degree": "B.S. in Computer Science",
+        "duration": "2009 - 2013"
+      }
+    ],
+    "projects": [
+      {
+        "name": "AI-Powered Recommendation Engine",
+        "description": "Built a machine learning recommendation system that increased user engagement by 25%",
+        "technologies": ["Python", "TensorFlow", "AWS"]
+      },
+      {
+        "name": "Blockchain Transaction Analyzer",
+        "description": "Created a tool to visualize and analyze blockchain transactions",
+        "technologies": ["JavaScript", "D3.js", "Node.js"]
+      }
+    ],
+    "certifications": [
+      "AWS Certified Solutions Architect",
+      "Google Cloud Professional Data Engineer",
+      "Certified Scrum Master"
+    ],
+    "languages": [
+      {"language": "English", "proficiency": "Native"},
+      {"language": "Spanish", "proficiency": "Intermediate"},
+      {"language": "Mandarin", "proficiency": "Basic"}
+    ],
+    "keywords": [
+      "Full-stack developer",
+      "Cloud architecture",
+      "Machine learning engineer",
+      "Agile",
+      "DevOps"
+    ],
+    "years_of_experience": 8
+  },
+  "job_description": "We are looking for a Senior Software Engineer to join our growing team. The ideal candidate will have strong experience with Python, cloud technologies (AWS/GCP), and microservices architecture. You will be responsible for developing and maintaining our core backend services, collaborating with frontend teams, and helping to scale our infrastructure as we grow.\n\nRequirements:\n- 5+ years of experience in software development\n- Strong knowledge of Python and at least one web framework (Django, Flask)\n- Experience with cloud platforms (AWS/GCP)\n- Experience with containerization (Docker) and orchestration (Kubernetes)\n- Familiarity with CI/CD pipelines\n- Understanding of RESTful APIs and microservices architecture\n- Experience with SQL and NoSQL databases\n- Strong problem-solving skills and attention to detail\n\nPreferred Qualifications:\n- Experience with machine learning or data science\n- Knowledge of JavaScript and frontend frameworks\n- Open-source contributions\n- Experience mentoring junior developers",
+  "cv_text": "Jordan Smith\njordan.smith@example.com | +1 (555) 123-4567 | San Francisco, CA\n\nSKILLS\nPython, JavaScript, React, Node.js, SQL, MongoDB, Docker, AWS, Machine Learning, Data Analysis, Project Management, Agile Methodologies, CI/CD, Git, REST APIs\n\nWORK EXPERIENCE\n\nTechCorp Solutions\nSenior Software Engineer | Jan 2020 - Present\n• Led a team of 5 developers to build a microservices architecture\n• Reduced API response time by 40% through performance optimization\n• Implemented CI/CD pipeline that reduced deployment time by 60%\n• Migrated legacy systems to cloud-based infrastructure\n\nDataViz Inc.\nSoftware Developer | Mar 2017 - Dec 2019\n• Developed data visualization dashboard used by 50+ enterprise clients\n• Built RESTful APIs connecting frontend to backend services\n• Created automated testing framework that increased code coverage by 30%\n\nStartup Innovations\nJunior Developer | Jun 2015 - Feb 2017\n• Contributed to web application serving 10,000+ daily users\n• Implemented user authentication and authorization system\n• Assisted in database design and optimization\n\nEDUCATION\n\nUniversity of California, Berkeley\nM.S. in Computer Science | 2013 - 2015\n\nStanford University\nB.S. in Computer Science | 2009 - 2013\n\nPROJECTS\n\nAI-Powered Recommendation Engine\n• Built a machine learning recommendation system that increased user engagement by 25%\n• Technologies: Python, TensorFlow, AWS\n\nBlockchain Transaction Analyzer\n• Created a tool to visualize and analyze blockchain transactions\n• Technologies: JavaScript, D3.js, Node.js\n\nCERTIFICATIONS\n• AWS Certified Solutions Architect\n• Google Cloud Professional Data Engineer\n• Certified Scrum Master\n\nLANGUAGES\n• English (Native)\n• Spanish (Intermediate)\n• Mandarin (Basic)",
+  "custom_questions": [
+    "How do you manage technical debt in a fast-paced environment?",
+    "Describe a situation where you had to make a difficult technical decision.",
+    "How do you approach knowledge sharing within your team?"
+  ],
+  "personality_focus": "Looking for someone who demonstrates initiative, collaborative skills, and adaptability to changing requirements.",
+  "interview_context": {
+    "position": "Senior Software Engineer",
+    "interview_stage": "Technical Round",
+    "interviewer": "Alex Johnson, Engineering Manager",
+    "focus_areas": ["System Design", "Problem Solving", "Team Collaboration"]
+  },
+  "previous_questions": [
+    "Can you describe a challenging problem you solved recently?",
+    "How do you approach system design for scalable applications?",
+    "Tell me about your experience with microservices architecture."
+  ],
+  "previous_responses": [
+    "In my current role, we faced performance issues with our user authentication system. I identified that we were making redundant database queries and implemented a caching layer using Redis. This reduced authentication time by 70% and significantly improved the overall system response time.",
+    "When designing scalable systems, I start by identifying the core requirements and constraints. I then break down the system into components that can scale independently. I prefer starting with a monolith for rapid development and then extracting microservices as needed based on scaling requirements.",
+    "I've worked with microservices for the past 3 years. At TechCorp, I led the migration from a monolithic architecture to microservices. We used Docker for containerization and Kubernetes for orchestration. The key challenge was managing data consistency across services, which we addressed using event-driven communication and implementing the Saga pattern for distributed transactions."
+  ],
+  "transcript": "Interviewer: Let's start by discussing your background. Can you walk me through your experience with cloud technologies?\n\nCandidate: Sure. I've been working with AWS for about 5 years now. At TechCorp, I led the migration of our entire infrastructure to AWS. We used EC2 for computation, S3 for storage, and RDS for databases. I also implemented serverless architecture using Lambda for certain microservices. Most recently, I set up auto-scaling groups that helped us reduce costs by 30% while maintaining performance during traffic spikes.\n\nInterviewer: That's impressive. How do you approach system design for scalable applications?\n\nCandidate: I believe in starting simple and scaling as needed. I first identify the core requirements and constraints of the system. Then I break it down into components that can scale independently. I prefer beginning with a monolith for rapid development and then extracting microservices as needed based on scaling requirements. Data management is crucial in distributed systems, so I carefully design schemas and APIs to ensure consistency while minimizing coupling between services.\n\nInterviewer: Can you tell me about a challenging problem you solved recently?\n\nCandidate: We were experiencing performance issues with our user authentication system. After profiling the code, I discovered we were making redundant database queries for each user session validation. I implemented a caching layer using Redis, which reduced authentication time by 70% and significantly improved the overall system response time. The challenge was ensuring cache invalidation worked properly to maintain security, which we solved using short TTLs and explicit invalidation on password changes.\n\nInterviewer: How do you keep up with new technologies in such a rapidly changing field?\n\nCandidate: I dedicate about 5 hours per week to learning. I follow several technical blogs, participate in online communities like Stack Overflow, and contribute to open-source projects. I also attend virtual conferences and workshops. Recently, I completed a course on machine learning to understand how we could integrate AI into our product features.\n\nInterviewer: Let's talk about your experience working in teams. How do you handle disagreements over technical approaches?\n\nCandidate: I believe in data-driven discussions. When there's a disagreement, I try to understand the other person's perspective by asking questions. I focus on the problem we're trying to solve rather than pushing for a particular solution. For important decisions, I often suggest building small prototypes to compare approaches objectively. In one instance, we were debating between GraphQL and REST for a new API. We implemented both approaches for a small subset of features and evaluated them based on development speed, performance, and client integration complexity.\n\nInterviewer: That's a great approach. How do you manage technical debt?\n\nCandidate: I follow the scout rule - leave the code better than you found it. For larger refactoring, I advocate for allocating 20% of our sprint capacity to technical debt. I maintain a prioritized backlog of technical debt items based on their impact on development speed and system stability. I also set up static code analysis tools in our CI pipeline to prevent new technical debt from being introduced.\n\nInterviewer: Excellent. Finally, do you have any questions for me?\n\nCandidate: Yes, I'd like to understand your team's approach to innovation. How do you balance feature delivery with exploration of new technologies that might benefit the product long-term?",
+  "career_interests": [
+    "Technical Leadership",
+    "Machine Learning Engineering",
+    "Cloud Architecture"
+  ],
+  "personality_traits": [
+    "Analytical",
+    "Detail-oriented",
+    "Collaborative",
+    "Self-motivated"
+  ]
+}

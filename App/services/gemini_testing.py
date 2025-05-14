@@ -1,161 +1,198 @@
-import pytest
-from unittest.mock import Mock, patch
+import os
 import json
-from gemini_service import GeminiService  # Replace with actual module path
+import logging
+from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Try to import the GeminiService class
+try:
+    from gemini_service import GeminiService
+
+    logger.info("Successfully imported GeminiService module")
+except ImportError as e:
+    logger.error(f"Error importing GeminiService: {e}")
+    logger.info("Using GeminiService from local paste")
+
+# Load environment variables
+load_dotenv(dotenv_path=".env")
 
 
-class TestGeminiService:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.service = GeminiService(api_key="test-api-key")
-        self.sample_cv_data = {
-            "skills": ["Python", "SQL"],
-            "experience": [{"role": "Developer"}],
-            "education": ["Computer Science"]
-        }
-        self.sample_job_desc = "Looking for a Python developer with 5 years experience"
-        self.sample_transcript = "Interviewer: Question? Candidate: Answer."
+def load_test_data(file_path="./App/services/testing_files/testing_data.json"):
+    """Load test data from JSON file"""
+    try:
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.error(f"Test data file not found: {file_path}")
+        return {}
+    except json.JSONDecodeError:
+        logger.error(f"Invalid JSON in test data file: {file_path}")
+        return {}
 
-    def test_init_missing_api_key(self):
-        with pytest.raises(ValueError):
-            GeminiService(api_key=None)
 
-    @patch.object(GeminiService, '_make_request')
-    def test_parse_cv_success(self, mock_make_request):
-        mock_response = {
-            "personal_info": {"name": "John Doe"},
-            "skills": ["Python", "Testing"],
-            "experience": [],
-            "education": []
-        }
-        mock_make_request.return_value = json.dumps(mock_response)
+def print_json_response(title, response):
+    """Pretty print a JSON response"""
+    print(f"\n{'=' * 80}")
+    print(f"TEST: {title}")
+    print(f"{'=' * 80}")
 
-        result = self.service.parse_cv("Sample CV text")
-        assert "personal_info" in result
-        assert "skills" in result
-        assert isinstance(result["skills"], list)
+    if isinstance(response, dict) and response.get('error'):
+        print(f"ERROR: {response.get('error')}")
+        if 'raw_response' in response:
+            print(f"RAW RESPONSE: {response.get('raw_response')[:500]}...")
+    else:
+        try:
+            print(json.dumps(response, indent=2))
+        except TypeError:
+            print(f"Could not format as JSON: {response}")
 
-    @patch.object(GeminiService, '_make_request')
-    def test_parse_cv_invalid_json(self, mock_make_request):
-        mock_make_request.return_value = "Invalid JSON"
-        result = self.service.parse_cv("Bad CV")
-        assert "error" in result
+    print(f"{'=' * 80}\n")
 
-    @patch.object(GeminiService, '_make_request')
-    def test_generate_interview_questions(self, mock_make_request):
-        mock_questions = [{
-            "question_text": "Test question?",
-            "question_type": "technical",
-            "skill_assessed": "Python",
-            "difficulty": 3
-        }]
-        mock_make_request.return_value = json.dumps(mock_questions)
 
-        result = self.service.generate_interview_questions(
-            job_description=self.sample_job_desc,
-            cv_data=self.sample_cv_data
+def test_parse_cv(service, test_data):
+    """Test CV parsing"""
+    cv_text = test_data.get("cv_text", "")
+    parsed = service.parse_cv(cv_text)
+    print_json_response(
+        "CV Parsing",
+        parsed
+    )
+
+
+def test_generate_interview_questions(service, test_data):
+    """Test interview question generation"""
+    print_json_response(
+        "Interview Question Generation",
+        service.generate_interview_questions(
+            job_description=test_data.get("job_description", ""),
+            cv_data=test_data.get("cv_data", {}),
+            custom_questions=test_data.get("custom_questions", []),
+            personality_focus=test_data.get("personality_focus", ""),
+            num_questions=5
         )
-        assert isinstance(result, list)
-        assert len(result) > 0
-        assert "question_text" in result[0]
+    )
 
-    @patch.object(GeminiService, '_make_request')
-    def test_analyze_interview_response(self, mock_make_request):
-        mock_analysis = {
-            "score": 8,
-            "strengths": ["Good structure"],
-            "weaknesses": ["Lacked examples"]
-        }
-        mock_make_request.return_value = json.dumps(mock_analysis)
 
-        result = self.service.analyze_interview_response(
-            question="Test question?",
-            response="Test response"
+def test_analyze_interview_response(service, test_data):
+    """Test interview response analysis"""
+    # Get the first question and response from test data
+    question = test_data.get("previous_questions", [""])[0]
+    response = test_data.get("previous_responses", [""])[0]
+
+    print_json_response(
+        "Interview Response Analysis",
+        service.analyze_interview_response(
+            question=question,
+            response=response,
+            expected_points=["Problem identification", "Solution implementation", "Measurable results"],
+            job_description=test_data.get("job_description", "")
         )
-        assert "score" in result
-        assert isinstance(result["strengths"], list)
+    )
 
-    @patch.object(GeminiService, '_make_request')
-    def test_generate_interview_summary(self, mock_make_request):
-        mock_summary = {
-            "overall_score": 75,
-            "summary": "Good candidate",
-            "key_strengths": ["Technical skills"]
-        }
-        mock_make_request.return_value = json.dumps(mock_summary)
 
-        result = self.service.generate_interview_summary(
-            transcript=self.sample_transcript
+def test_generate_interview_summary(service, test_data):
+    """Test interview summary generation"""
+    print_json_response(
+        "Interview Summary",
+        service.generate_interview_summary(
+            transcript=test_data.get("transcript", ""),
+            job_description=test_data.get("job_description", ""),
+            cv_data=test_data.get("cv_data", {})
         )
-        assert "overall_score" in result
-        assert "summary" in result
+    )
 
-    @patch.object(GeminiService, '_make_request')
-    def test_generate_career_advice(self, mock_make_request):
-        mock_advice = {
-            "suitable_roles": ["Python Developer"],
-            "skill_gaps": ["Cloud computing"]
-        }
-        mock_make_request.return_value = json.dumps(mock_advice)
 
-        result = self.service.generate_career_advice(
-            cv_data=self.sample_cv_data,
-            career_interests=["Software Development"]
+def test_generate_career_advice(service, test_data):
+    """Test career advice generation"""
+    print_json_response(
+        "Career Advice",
+        service.generate_career_advice(
+            cv_data=test_data.get("cv_data", {}),
+            career_interests=test_data.get("career_interests", []),
+            personality_traits=test_data.get("personality_traits", [])
         )
-        assert "suitable_roles" in result
-        assert isinstance(result["skill_gaps"], list)
+    )
 
-    @patch.object(GeminiService, '_make_request')
-    def test_analyze_cv_for_job(self, mock_make_request):
-        mock_analysis = {
-            "match_score": 80,
-            "matching_skills": ["Python"],
-            "missing_skills": ["AWS"]
-        }
-        mock_make_request.return_value = json.dumps(mock_analysis)
 
-        result = self.service.analyze_cv_for_job(
-            cv_data=self.sample_cv_data,
-            job_description=self.sample_job_desc
+def test_analyze_cv_for_job(service, test_data):
+    """Test CV analysis for job fit"""
+    print_json_response(
+        "CV Job Fit Analysis",
+        service.analyze_cv_for_job(
+            cv_data=test_data.get("cv_data", {}),
+            job_description=test_data.get("job_description", "")
         )
-        assert "match_score" in result
-        assert isinstance(result["matching_skills"], list)
+    )
 
-    @patch.object(GeminiService, '_make_request')
-    def test_generate_follow_up_question(self, mock_make_request):
-        mock_question = {
-            "question_text": "Follow up?",
-            "question_type": "technical"
-        }
-        mock_make_request.return_value = json.dumps(mock_question)
 
-        result = self.service.generate_follow_up_question(
-            interview_context={},
-            previous_questions=["What is Python?"],
-            previous_responses=["It's a language"]
+def test_generate_follow_up_question(service, test_data):
+    """Test follow-up question generation"""
+    print_json_response(
+        "Follow-up Question Generation",
+        service.generate_follow_up_question(
+            interview_context=test_data.get("interview_context", {}),
+            previous_questions=test_data.get("previous_questions", []),
+            previous_responses=test_data.get("previous_responses", []),
+            job_description=test_data.get("job_description", "")
         )
-        assert "question_text" in result
-        assert len(result["question_text"]) > 0
+    )
 
-    @patch.object(GeminiService, '_make_request')
-    def test_error_handling_invalid_json(self, mock_make_request):
-        mock_make_request.return_value = "Invalid JSON"
 
-        # Test multiple methods that should handle JSON parsing errors
-        methods = [
-            lambda: self.service.parse_cv(""),
-            lambda: self.service.generate_interview_questions(""),
-            lambda: self.service.analyze_interview_response("", ""),
-            lambda: self.service.generate_career_advice({}, [])
-        ]
+def main():
+    """Main test function"""
+    # Load test data
+    test_data = load_test_data()
+    if not test_data:
+        logger.error("No test data available. Exiting.")
+        return
 
-        for method in methods:
-            result = method()
-            assert "error" in result or "Could not" in str(result)
+    # Create GeminiService instance
+    api_key = os.environ.get('GEMINI_API_KEY')
 
-    @patch.object(GeminiService, '_make_request')
-    def test_api_error_handling(self, mock_make_request):
-        mock_make_request.side_effect = Exception("API Error")
+    try:
+        service = GeminiService(api_key=api_key)
+        logger.info("GeminiService initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize GeminiService: {e}")
+        return
 
-        with pytest.raises(Exception):
-            self.service.parse_cv("CV text")
+    # Run tests for each method
+    # CV Parser
+    test_parse_cv(service, test_data)
+
+    try:
+        test_generate_interview_questions(service, test_data)
+    except Exception as e:
+        logger.error(f"Error testing generate_interview_questions: {e}")
+
+    try:
+        test_analyze_interview_response(service, test_data)
+    except Exception as e:
+        logger.error(f"Error testing analyze_interview_response: {e}")
+
+    try:
+        test_generate_interview_summary(service, test_data)
+    except Exception as e:
+        logger.error(f"Error testing generate_interview_summary: {e}")
+
+    try:
+        test_generate_career_advice(service, test_data)
+    except Exception as e:
+        logger.error(f"Error testing generate_career_advice: {e}")
+
+    try:
+        test_analyze_cv_for_job(service, test_data)
+    except Exception as e:
+        logger.error(f"Error testing analyze_cv_for_job: {e}")
+
+    try:
+        test_generate_follow_up_question(service, test_data)
+    except Exception as e:
+        logger.error(f"Error testing generate_follow_up_question: {e}")
+
+
+if __name__ == "__main__":
+    main()

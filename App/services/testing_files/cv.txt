@@ -1,0 +1,58 @@
+Johnathan Doe
+123 Main Street, Techville, TV 10101 | (555) 123-4567 | john.doe@email.com | linkedin.com/in/johndoe
+
+PROFESSIONAL SUMMARY
+Results-driven Software Engineer with 5+ years of experience in full-stack development. Specialized in Python and JavaScript frameworks with a proven track record of delivering scalable web applications. Passionate about clean code architecture and agile methodologies.
+
+TECHNICAL SKILLS
+- Programming: Python, JavaScript, TypeScript, Java
+- Frameworks: Django, Flask, React, Node.js
+- Databases: PostgreSQL, MongoDB, Redis
+- DevOps: Docker, AWS, CI/CD pipelines
+- Tools: Git, JIRA, VS Code, Postman
+- Soft Skills: Team leadership, Agile coaching, Technical writing
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer
+TechSolutions Inc., Techville, TV | Jan 2021 - Present
+- Led a team of 5 developers to build a SaaS platform using Django and React
+- Improved API response times by 40% through query optimization
+- Implemented CI/CD pipeline reducing deployment time by 65%
+- Mentored junior developers through code reviews and pair programming
+
+Software Developer
+InnovateStartups LLC, Startup City, SC | Jun 2018 - Dec 2020
+- Developed RESTful APIs handling 10,000+ daily requests
+- Created automated testing suite reducing bugs in production by 30%
+- Integrated third-party payment systems increasing checkout conversion by 25%
+- Participated in bi-weekly sprint planning and retrospectives
+
+EDUCATION
+Bachelor of Science in Computer Science
+State University, College Town, CT | Graduated May 2018
+- GPA: 3.8/4.0
+- Coursework: Algorithms, Data Structures, Machine Learning
+- Senior Project: AI-powered recommendation engine (Python, TensorFlow)
+
+PERSONAL PROJECTS
+- Expense Tracker App (2023): Full-stack application with React frontend and Flask backend
+- Open Source Contributor: Regular contributor to several Python packages on GitHub
+- Tech Blog: Author of "Python Performance Optimization" series (50k+ monthly readers)
+
+CERTIFICATIONS
+- AWS Certified Developer - Associate (2022)
+- Python Institute PCAP (2020)
+- Scrum Master Certification (2019)
+
+LANGUAGES
+- English (Native)
+- Spanish (Professional Working Proficiency)
+- French (Elementary Proficiency)
+
+ADDITIONAL INFORMATION
+- Active participant in local hackathons (3-time winner)
+- Volunteer coding instructor at TechYouth Foundation
+- Regular attendee of PyCon and React conferences
+
+KEYWORDS: Python, Django, React, Full-Stack Development, API Design, Database Optimization, Team Leadership, Agile Methodologies, Cloud Computing
