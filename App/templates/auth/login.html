@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Automated HR</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Color Palette */
+        :root {
+            --primary: #2563EB;      /* Royal Blue - Main brand color */
+            --primary-dark: #1E40AF; /* Darker blue for hover states */
+            --secondary: #10B981;    /* Emerald Green - Secondary actions */
+            --accent: #7C3AED;       /* Purple - Accent elements */
+            --background: #F9FAFB;   /* Light Gray - Page background */
+            --card-bg: #FFFFFF;      /* White - Card background */
+            --error: #EF4444;        /* Red - Error messages */
+            --success: #10B981;      /* Green - Success messages */
+            --warning: #F59E0B;      /* Amber - Warning messages */
+            --text-primary: #1F2937; /* Dark Gray - Primary text */
+            --text-secondary: #6B7280; /* Medium Gray - Secondary text */
+            --text-light: #9CA3AF;   /* Light Gray - Tertiary text */
+            --border: #E5E7EB;       /* Light Gray - Borders */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 180px;
+            height: auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .checkbox-input {
+            margin-right: 0.5rem;
+        }
+
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .forgot-password {
+            display: block;
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .forgot-password:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .or-divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: var(--text-light);
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: var(--border);
+        }
+
+        .or-divider span {
+            padding: 0 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            background-color: var(--background);
+        }
+
+        .social-btn i {
+            margin-right: 0.5rem;
+        }
+
+        .signup-link {
+            font-size: 0.875rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .signup-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+            color: var(--primary-dark);
+        }
+
+        .illustration {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .illustration img {
+            max-width: 240px;
+            height: auto;
+        }
+
+        .error {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            font-size: 0.875rem;
+            display: none; /* Hidden by default */
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .illustration img {
+                max-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="/static/images/logo.png" alt="Automated HR Logo" class="logo">
+        </div>
+
+        <div class="card">
+            <h1>Welcome Back</h1>
+
+            <div id="error-message" class="error"></div>
+
+            <div class="tabs">
+                <div class="tab active" id="user-tab">User Login</div>
+                <div class="tab" id="enterprise-tab">Enterprise Login</div>
+            </div>
+
+            <form id="login-form" action="/auth/login" method="POST">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="remember-me" name="remember-me" class="checkbox-input">
+                    <label for="remember-me" class="checkbox-label">Remember me</label>
+                </div>
+
+                <a href="/auth/forgot-password" class="forgot-password">Forgot Password?</a>
+
+                <input type="hidden" id="account-type" name="account_type" value="user">
+                <button type="submit" class="btn btn-primary">Log In</button>
+            </form>
+
+            <div class="or-divider">
+                <span>OR</span>
+            </div>
+
+            <div class="social-buttons">
+                <button class="social-btn">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button class="social-btn">
+                    <i class="fab fa-linkedin-in"></i> LinkedIn
+                </button>
+            </div>
+
+            <p class="signup-link">
+                Don't have an account? <a href="/auth/register">Sign up</a>
+            </p>
+        </div>
+
+        <div class="illustration">
+            <img src="/static/images/login-illustration.svg" alt="Secure Login Illustration">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userTab = document.getElementById('user-tab');
+            const enterpriseTab = document.getElementById('enterprise-tab');
+            const accountTypeInput = document.getElementById('account-type');
+            const loginForm = document.getElementById('login-form');
+            const errorMessage = document.getElementById('error-message');
+
+            userTab.addEventListener('click', function() {
+                userTab.classList.add('active');
+                enterpriseTab.classList.remove('active');
+                accountTypeInput.value = 'user';
+            });
+
+            enterpriseTab.addEventListener('click', function() {
+                enterpriseTab.classList.add('active');
+                userTab.classList.remove('active');
+                accountTypeInput.value = 'enterprise';
+            });
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(loginForm);
+                
+                fetch('/auth/login', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorMessage.textContent = data.error;
+                        errorMessage.style.display = 'block';
+                    } else {
+                        // Store tokens and redirect based on user type
+                        localStorage.setItem('access_token', data.access_token);
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                        localStorage.setItem('user_type', data.user_type);
+                        localStorage.setItem('user_id', data.user_id);
+                        
+                        if (data.user_type === 'user') {
+                            window.location.href = '/user/dashboard';
+                        } else {
+                            window.location.href = '/enterprise/dashboard';
+                        }
+                    }
+                })
+                .catch(error => {
+                    errorMessage.textContent = 'An error occurred. Please try again.';
+                    errorMessage.style.display = 'block';
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
