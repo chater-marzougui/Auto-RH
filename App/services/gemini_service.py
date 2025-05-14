@@ -9,20 +9,25 @@ This module provides functions to interact with the Gemini API for:
 """
 import os
 import json
+
+import google.generativeai
 from flask import current_app
 import google.generativeai as genai
 from typing import Dict, List, Tuple, Any, Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class GeminiService:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key: str=None) -> None:
+        load_dotenv()
         """Initialize the Gemini service with API key."""
         self.api_key = api_key or os.environ.get('GEMINI_API_KEY') or current_app.config.get('GEMINI_API_KEY')
-
         if not self.api_key:
             raise ValueError("Gemini API key not provided and not found in environment or app config")
 
-    def _make_request(self, prompt: str, parameters: Dict = None, system_prompt: str = "") -> str:
+    def _make_request(self, prompt: str, parameters: google.generativeai.GenerationConfig = None, system_prompt: str = "") -> str:
         """Make a request to the Gemini API.
         
         Args:
@@ -33,17 +38,19 @@ class GeminiService:
             The JSON response from the API
         """
         if parameters is None:
-            parameters = {
-                "temperature": 0.7,
-                "top_p": 0.8,
-                "top_k": 40,
-                "max_output_tokens": 8192,
-            }
+            parameters = genai.GenerationConfig(
+                temperature=1,
+                top_p=0.95,
+                top_k=40,
+                max_output_tokens=4096,
+                response_mime_type="application/json"
+            )
 
+        genai.configure(api_key=self.api_key)
         model = genai.GenerativeModel(
             model_name="gemini-2.0-flash-exp",
-            generation_config=parameters,
-            system_instruction=system_prompt,
+            generation_config=parameters
+            # system_instruction=system_prompt
         )
         chat_session = model.start_chat(history=[])
         response = chat_session.send_message(prompt).text
@@ -82,19 +89,23 @@ class GeminiService:
         """
 
         # Use stricter parameters for CV parsing to ensure accuracy
-        parameters = {
-            "temperature": 0.2,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 4096,
-            "response_mime_type": "response_mime_type"
-        }
+        parameters = genai.GenerationConfig(
+            temperature=0.2,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
 
-        response = self._make_request(prompt, parameters)
+        response = self._make_request(prompt=prompt, parameters=parameters)
+        # print(f"request is done")
+        # print(f"here's the response : {response} ")
         try:
-            return json.loads(response)
+            json_response = json.loads(response)
+            # print(f"the json has been loaded successfully: {json_response}")
+            return json_response
         except (KeyError, json.JSONDecodeError) as e:
-            current_app.logger.error(f"Error parsing CV response: {e}")
+            print(f"Error parsing CV response: {e}")
             return {
                 "error": "Failed to parse CV",
                 "raw_response": str(response)
@@ -149,12 +160,13 @@ class GeminiService:
 
         prompt = "\n".join(prompt_parts)
 
-        parameters = {
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 4096,
-        }
+        parameters = genai.GenerationConfig(
+            temperature=0.7,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
 
         response = self._make_request(prompt, parameters)
 
@@ -209,12 +221,13 @@ class GeminiService:
 
         prompt = "\n".join(prompt_parts)
 
-        parameters = {
-            "temperature": 0.3,  # Lower temperature for more consistent scoring
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 2048,
-        }
+        parameters = genai.GenerationConfig(
+            temperature=0.3,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
 
         response = self._make_request(prompt, parameters)
 
@@ -272,17 +285,17 @@ class GeminiService:
 
         prompt = "\n".join(prompt_parts)
 
-        parameters = {
-            "temperature": 0.4,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 4096,
-        }
-
+        parameters = genai.GenerationConfig(
+            temperature=0.4,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
         response = self._make_request(prompt, parameters)
 
         try:
-            json.loads(response)
+            return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:
             current_app.logger.error(f"Error parsing summary response: {e}")
             return {
@@ -333,12 +346,13 @@ class GeminiService:
 
         prompt = "\n".join(prompt_parts)
 
-        parameters = {
-            "temperature": 0.6,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 4096,
-        }
+        parameters = genai.GenerationConfig(
+            temperature=0.6,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
 
         response = self._make_request(prompt, parameters)
 
@@ -386,12 +400,13 @@ class GeminiService:
         Return ONLY the JSON object without any additional text.
         """
 
-        parameters = {
-            "temperature": 0.3,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 2048,
-        }
+        parameters = genai.GenerationConfig(
+            temperature=0.3,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
 
         response = self._make_request(prompt, parameters)
 
@@ -456,12 +471,13 @@ class GeminiService:
 
         prompt = "\n".join(prompt_parts)
 
-        parameters = {
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 1024,
-        }
+        parameters = genai.GenerationConfig(
+            temperature=0.7,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
+            response_mime_type="application/json"
+        )
 
         response = self._make_request(prompt, parameters)
 
