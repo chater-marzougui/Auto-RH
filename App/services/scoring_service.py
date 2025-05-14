@@ -336,3 +336,24 @@ class ScoringService:
             'detailed_feedback': detailed_feedback,
             'comparative_stats': comparative_stats
         }
+        
+    def calculate_job_match_score(self, user_skills: list[str], required_skills: list[str]) -> int:
+        """
+        Calculate a match score for a job based on user skills
+        
+        Args:
+            user_skills: List of skills the user possesses
+            required_skills: List of skills required for the job
+            
+        Returns:
+            Match score (0-100)
+        """
+        if not required_skills:
+            return 100
+
+        if not user_skills:
+            return 0
+        matched_skills = set(user_skills) & set(required_skills)
+        match_score = len(matched_skills) / len(required_skills) * 100
+        return round(match_score)
+        

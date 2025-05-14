@@ -44,28 +44,27 @@ def create_app(config_name='default'):
     from app.routes.entreprise import enterprise_bp as enterprise_blueprint
     app.register_blueprint(enterprise_blueprint, url_prefix='/api/enterprise')
     
-    from app.routes.interview import interview as interview_blueprint
+    from app.routes.interview import interview_bp as interview_blueprint
     app.register_blueprint(interview_blueprint, url_prefix='/api/interview')
     
     from app.routes.dashboard import dashboard as dashboard_blueprint
     app.register_blueprint(dashboard_blueprint, url_prefix='/api/dashboard')
-    
-    from app.routes.job import job as job_blueprint
+    from app.routes.job import job_bp as job_blueprint
     app.register_blueprint(job_blueprint, url_prefix='/api/job')
     
-    from app.routes.careur import career as career_blueprint
+    from app.routes.careur import career_bp as career_blueprint
     app.register_blueprint(career_blueprint, url_prefix='/api/career')
     
     # Register main blueprint for home routes
-    from app.routes.main import main as main_blueprint
+    from app.routes.main import main_bp as main_blueprint
     app.register_blueprint(main_blueprint)
 
     # Register error handlers
     register_error_handlers(app)
     
     # Initialize Socket.IO events
-    from app.sockets import initialize_sockets
-    initialize_sockets(socketio)
+    import app.sockets.interview_socket as sockets
+    sockets.InterviewSocketNamespace(socketio)
     
     return app
 

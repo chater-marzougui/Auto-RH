@@ -16,6 +16,12 @@ from app.services.gemini_service import GeminiService
 from app.services.tts_service import TTSService
 from app.services.stt_service import STTService
 from app.services.scoring_service import ScoringService
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+gemini_api_key = os.getenv('GEMINI_API_KEY')
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +30,7 @@ class InterviewSocketNamespace(Namespace):
     
     def __init__(self, namespace="/interview"):
         super().__init__(namespace)
-        self.gemini_service = GeminiService()
+        self.gemini_service = GeminiService(api_key=gemini_api_key)
         self.tts_service = TTSService()
         self.stt_service = STTService()
         self.scoring_service = ScoringService()

@@ -6,16 +6,20 @@ from app.services.gemini_service import GeminiService
 from app.services.scoring_service import ScoringService
 from app.services.tts_service import TTSService
 from app.services.stt_service import STTService
-from app.utils.decorators import enterprise_required, role_required
+from app.utils.decorators import enterprise_required
 from datetime import datetime, timezone
 import json
 import uuid
-from werkzeug.utils import secure_filename
 import os
+from dotenv import load_dotenv
 
-interview_bp = Blueprint('interview', __name__)
-gemini_service = GeminiService()
-scoring_service = ScoringService()
+load_dotenv()
+
+gemini_api_key = os.getenv('GEMINI_API_KEY')
+
+interview_bp = Blueprint('interview', __name__, url_prefix='/interview')
+gemini_service = GeminiService(gemini_api_key)
+scoring_service = ScoringService(gemini_service)
 tts_service = TTSService()
 stt_service = STTService()
 errorHtmlPage = 'error.html'
@@ -131,7 +135,6 @@ def get_interview_details(interview_id):
 # User general assessment interviews
 @interview_bp.route('/assessment/start', methods=['POST'])
 @jwt_required()
-@role_required
 def start_general_assessment():
     """Start a general AI assessment interview without a specific job"""
     identity = get_jwt_identity()
@@ -200,7 +203,6 @@ def start_general_assessment():
 
 @interview_bp.route('/assessment/answer/<int:question_id>', methods=['POST'])
 @jwt_required()
-@role_required
 def submit_answer(question_id):
     """Submit an answer to a question in an ongoing interview"""
     identity = get_jwt_identity()
@@ -300,7 +302,6 @@ def submit_answer(question_id):
 
 @interview_bp.route('/assessment/finish/<int:interview_id>', methods=['POST'])
 @jwt_required()
-@role_required
 def finish_interview(interview_id):
     """Finish an interview and generate the final assessment"""
     identity = get_jwt_identity()

@@ -90,7 +90,7 @@ class GeminiService:
             "response_mime_type": "response_mime_type"
         }
 
-        response = self._make_request(prompt, parameters)
+        response = self._make_request(system_prompt+prompt, parameters)
         try:
             return json.loads(response)
         except (KeyError, json.JSONDecodeError) as e:

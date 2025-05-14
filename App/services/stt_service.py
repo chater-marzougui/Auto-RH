@@ -1,56 +1,44 @@
 """
 Speech-to-Text Service for Automated HR
 Handles transcription of audio to text during interviews
+Using SpeechRecognition library instead of external APIs
 """
 import logging
 import os
 import tempfile
 from typing import Optional, Dict, BinaryIO
-import whisper
+import speech_recognition as sr
 from pathlib import Path
-import requests
-import json
+import uuid
 import base64
-from flask import current_app
+import wave
+import io
 
 logger = logging.getLogger(__name__)
 
 class STTService:
     """
-    Service for Speech-to-Text conversions using OpenAI's Whisper
+    Service for Speech-to-Text conversions using SpeechRecognition library
     """
-    def __init__(self, model_size: str = "base"):
+    def __init__(self, engine: str = "google"):
         """
-        Initialize the STT service with a specified Whisper model size
+        Initialize the STT service with a specified recognition engine
         
         Args:
-            model_size: Whisper model size ('tiny', 'base', 'small', 'medium', 'large')
+            engine: Recognition engine ('google', 'sphinx')
         """
-        self.model_size = model_size
-        self._model = None  # Lazy loading
+        self.engine = engine
+        self.recognizer = sr.Recognizer()
         self.temp_dir = Path(tempfile.gettempdir()) / "automated_hr_audio"
         self.temp_dir.mkdir(exist_ok=True)
         
-    @property
-    def model(self):
-        """Lazy load the Whisper model on first use"""
-        if self._model is None:
-            try:
-                logger.info(f"Loading Whisper model: {self.model_size}")
-                self._model = whisper.load_model(self.model_size)
-                logger.info("Whisper model loaded successfully")
-            except Exception as e:
-                logger.error(f"Failed to load Whisper model: {str(e)}")
-                raise
-        return self._model
-    
-    def transcribe_audio_file(self, audio_file: BinaryIO, language: str = "en") -> Dict:
+    def transcribe_audio_file(self, audio_file: BinaryIO, language: str = "en-US") -> Dict:
         """
         Transcribe an audio file to text
         
         Args:
             audio_file: File-like object containing audio data
-            language: Language code (default: "en")
+            language: Language code (default: "en-US")
             
         Returns:
             Dict containing the transcription and metadata
@@ -61,33 +49,32 @@ class STTService:
             with open(temp_file, "wb") as f:
                 f.write(audio_file.read())
             
-            # Perform transcription
-            result = self.model.transcribe(
-                str(temp_file), 
-                language=language,
-                fp16=False  # Use CPU if GPU not available
-            )
+            # Load audio file with SpeechRecognition
+            with sr.AudioFile(str(temp_file)) as source:
+                audio_data = self.recognizer.record(source)
+            
+            # Perform transcription using the selected engine
+            text = self._recognize_audio(audio_data, language)
             
             # Clean up
             temp_file.unlink(missing_ok=True)
             
             return {
-                "text": result["text"],
-                "segments": result.get("segments", []),
-                "language": result.get("language", language)
+                "text": text,
+                "language": language
             }
             
         except Exception as e:
             logger.error(f"Error transcribing audio: {str(e)}")
             return {"error": str(e), "text": ""}
     
-    def transcribe_audio_data(self, audio_data: bytes, language: str = "en") -> Dict:
+    def transcribe_audio_data(self, audio_data: bytes, language: str = "en-US") -> Dict:
         """
         Transcribe audio data bytes to text
         
         Args:
             audio_data: Raw audio data bytes
-            language: Language code (default: "en")
+            language: Language code (default: "en-US")
             
         Returns:
             Dict containing the transcription and metadata
@@ -98,33 +85,32 @@ class STTService:
             with open(temp_file, "wb") as f:
                 f.write(audio_data)
             
+            # Load audio file with SpeechRecognition
+            with sr.AudioFile(str(temp_file)) as source:
+                audio = self.recognizer.record(source)
+            
             # Perform transcription
-            result = self.model.transcribe(
-                str(temp_file), 
-                language=language,
-                fp16=False
-            )
+            text = self._recognize_audio(audio, language)
             
             # Clean up
             temp_file.unlink(missing_ok=True)
             
             return {
-                "text": result["text"],
-                "segments": result.get("segments", []),
-                "language": result.get("language", language)
+                "text": text,
+                "language": language
             }
             
         except Exception as e:
             logger.error(f"Error transcribing audio data: {str(e)}")
             return {"error": str(e), "text": ""}
     
-    def transcribe_audio_base64(self, audio_base64: str, language: str = "en") -> Dict:
+    def transcribe_audio_base64(self, audio_base64: str, language: str = "en-US") -> Dict:
         """
         Transcribe base64-encoded audio to text
         
         Args:
             audio_base64: Base64-encoded audio data
-            language: Language code (default: "en")
+            language: Language code (default: "en-US")
             
         Returns:
             Dict containing the transcription and metadata
@@ -138,13 +124,13 @@ class STTService:
             logger.error(f"Error decoding base64 audio: {str(e)}")
             return {"error": str(e), "text": ""}
             
-    def transcribe_audio_chunk(self, audio_data: bytes, language: str = "en") -> str:
+    def transcribe_audio_chunk(self, audio_data: bytes, language: str = "en-US") -> str:
         """
         Transcribe a small chunk of audio (for real-time transcription)
         
         Args:
             audio_data: Raw audio data bytes
-            language: Language code (default: "en")
+            language: Language code (default: "en-US")
             
         Returns:
             Transcribed text
@@ -156,49 +142,33 @@ class STTService:
             logger.error(f"Error transcribing audio chunk: {str(e)}")
             return ""
     
-    def transcribe_with_external_api(self, audio_file: BinaryIO) -> Dict:
+    def _recognize_audio(self, audio_data: sr.AudioData, language: str = "en-US") -> str:
         """
-        Use an external API for transcription when local processing is not preferred
+        Recognize speech in audio data using the selected engine
         
         Args:
-            audio_file: File-like object containing audio data
+            audio_data: AudioData object from SpeechRecognition
+            language: Language code
             
         Returns:
-            Dict containing the transcription result
+            Transcribed text
         """
-        api_key = current_app.config.get("SPEECH_API_KEY")
-        api_url = current_app.config.get("SPEECH_API_URL")
-        
-        if not api_key or not api_url:
-            logger.error("External transcription API credentials not configured")
-            return {"error": "External API not configured", "text": ""}
-        
         try:
-            # Save the file temporarily
-            temp_file = self.temp_dir / f"temp_{os.urandom(8).hex()}.wav"
-            with open(temp_file, "wb") as f:
-                f.write(audio_file.read())
-            
-            # Upload to API
-            with open(temp_file, "rb") as f:
-                response = requests.post(
-                    api_url,
-                    files={"file": f},
-                    headers={"Authorization": f"Bearer {api_key}"}
-                )
-                
-            # Clean up
-            temp_file.unlink(missing_ok=True)
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                logger.error(f"API error: {response.status_code} - {response.text}")
-                return {"error": f"API error: {response.status_code}", "text": ""}
-                
+            if self.engine == "google":
+                # Use Google's free web recognition (no API key needed)
+                return self.recognizer.recognize_google(audio_data, language=language)
+            elif self.engine == "sphinx":
+                # Use CMU Sphinx (works offline)
+                return self.recognizer.recognize_sphinx(audio_data, language=language)
+        except sr.UnknownValueError:
+            logger.warning("Speech could not be understood")
+            return ""
+        except sr.RequestError as e:
+            logger.error(f"Recognition request failed: {e}")
+            return ""
         except Exception as e:
-            logger.error(f"Error using external transcription API: {str(e)}")
-            return {"error": str(e), "text": ""}
+            logger.error(f"Recognition error: {e}")
+            return ""
 
     def continuous_transcription_start(self) -> str:
         """
@@ -207,7 +177,6 @@ class STTService:
         Returns:
             Session ID for the transcription
         """
-        import uuid
         session_id = str(uuid.uuid4())
         
         # Create a session directory
@@ -252,27 +221,72 @@ class STTService:
             return {"error": "Session not found", "text": ""}
         
         try:
-            # Concatenate all audio chunks (simplified approach)
+            # Concatenate all audio chunks
             all_chunks = sorted(session_dir.glob("chunk_*.wav"))
             if not all_chunks:
                 return {"text": ""}
             
-            # Use the first chunk for transcription (or implement audio concatenation here)
-            result = self.model.transcribe(
-                str(all_chunks[0]),
-                fp16=False
-            )
+            # For proper concatenation, we would need to merge WAV files correctly
+            # This is a simplified approach for demonstration
+            if len(all_chunks) == 1:
+                # Only one chunk, no need to merge
+                with sr.AudioFile(str(all_chunks[0])) as source:
+                    audio_data = self.recognizer.record(source)
+                text = self._recognize_audio(audio_data)
+            else:
+                # Process each chunk separately and combine the results
+                # More sophisticated audio merging would be needed for production use
+                combined_text = ""
+                for chunk_file in all_chunks:
+                    with sr.AudioFile(str(chunk_file)) as source:
+                        audio_data = self.recognizer.record(source)
+                    chunk_text = self._recognize_audio(audio_data)
+                    if chunk_text:
+                        combined_text += chunk_text + " "
+                text = combined_text.strip()
             
             # Clean up
             import shutil
             shutil.rmtree(session_dir)
             
             return {
-                "text": result["text"],
-                "segments": result.get("segments", []),
-                "language": result.get("language", "en")
+                "text": text,
+                "language": "en-US"  # Default language
             }
             
         except Exception as e:
             logger.error(f"Error ending transcription session: {str(e)}")
             return {"error": str(e), "text": ""}
+            
+    def merge_wav_files(self, input_files, output_file):
+        """
+        Merge multiple WAV files into one
+        
+        Args:
+            input_files: List of WAV file paths
+            output_file: Output WAV file path
+        """
+        data = []
+        sample_rate = None
+        sample_width = None
+        
+        # Read all input files
+        for file_path in input_files:
+            with wave.open(str(file_path), 'rb') as wf:
+                if sample_rate is None:
+                    sample_rate = wf.getframerate()
+                    sample_width = wf.getsampwidth()
+                    channels = wf.getnchannels()
+                elif sample_rate != wf.getframerate() or sample_width != wf.getsampwidth():
+                    logger.warning(f"WAV file {file_path} has different format, skipping")
+                    continue
+                
+                data.append(wf.readframes(wf.getnframes()))
+        
+        # Write merged file
+        with wave.open(str(output_file), 'wb') as wf:
+            wf.setnchannels(channels)
+            wf.setsampwidth(sample_width)
+            wf.setframerate(sample_rate)
+            for fragment in data:
+                wf.writeframes(fragment)

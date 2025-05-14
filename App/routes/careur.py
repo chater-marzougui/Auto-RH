@@ -1,10 +1,14 @@
 from flask import Blueprint, request, jsonify, render_template, current_app, g
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User, CareerRoadmap, db
-from app.services.gemini_service import generate_career_advice, generate_skill_roadmap
-from app.utils.file_parser import extract_skills_from_cv
-from app.utils.recommender import recommend_courses, recommend_career_paths
+import app.services.gemini_service as gemini_service
+from app.utils.file_parser import parse_cv
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+gemini_service = gemini_service.GeminiService(api_key=os.getenv('GEMINI_API_KEY'))
 
 career_bp = Blueprint('career', __name__, url_prefix='/career')
 userNotFoundErrStr = "User not found"
@@ -25,23 +29,20 @@ def career_roadmap():
             return jsonify({'error': userNotFoundErrStr}), 404
             
         # Extract skills from CV if user has uploaded one
-        skills = []
+        cv_data = None
         if user.cv_path and os.path.exists(user.cv_path):
-            skills = extract_skills_from_cv(user.cv_path)
+            cv_data = parse_cv(user.cv_path)
         
         # Get additional inputs for roadmap generation
         current_role = data.get('current_role', '')
         target_role = data.get('target_role', '')
-        timeframe = data.get('timeframe', '6 months')  # Default 6 months
         personality_traits = data.get('personality_traits', [])
         
         # Use Gemini to generate career roadmap
-        roadmap_data = generate_skill_roadmap(
-            current_skills=skills,
-            current_role=current_role,
-            target_role=target_role,
-            timeframe=timeframe,
-            personality_traits=personality_traits
+        roadmap_data = gemini_service.generate_career_roadmap(
+            cv_data=cv_data,
+            career_interests=[target_role],
+            personality_traits=personality_traits,
         )
         
         # Store the roadmap in the database
@@ -116,15 +117,13 @@ def manage_roadmap(roadmap_id):
     # Re-generate roadmap if significant changes
     if 'regenerate' in data and data['regenerate']:
         user = User.query.get(user_id)
-        skills = []
+        cv_data = None
         if user.cv_path and os.path.exists(user.cv_path):
-            skills = extract_skills_from_cv(user.cv_path)
+            cv_data = parse_cv(user.cv_path)
             
-        roadmap_data = generate_skill_roadmap(
-            current_skills=skills,
-            current_role=roadmap.current_role,
-            target_role=roadmap.target_role,
-            timeframe=data.get('timeframe', '6 months'),
+        roadmap_data = gemini_service.generate_career_advice(
+            cv_data=cv_data,
+            career_interests=[roadmap.target_role],
             personality_traits=data.get('personality_traits', [])
         )
         
@@ -147,18 +146,20 @@ def get_career_advice():
     data = request.form or request.get_json()
     
     # Extract skills from CV if user has uploaded one
-    skills = []
+    cv_data = []
     if user.cv_path and os.path.exists(user.cv_path):
-        skills = extract_skills_from_cv(user.cv_path)
+        cv_data = parse_cv(user.cv_path)
     
     # Get career preferences
     preferences = data.get('preferences', {})
     personality_traits = data.get('personality_traits', [])
     
+    prefs_list = [f"'Preference': {k}, 'value': {v} " for k, v in preferences.items()]
+    
     # Use Gemini to generate career advice
-    advice = generate_career_advice(
-        skills=skills,
-        preferences=preferences,
+    advice = gemini_service.generate_career_advice(
+        cv_data=cv_data,
+        career_interests=prefs_list,
         personality_traits=personality_traits
     )
     
@@ -180,16 +181,9 @@ def recommended_courses():
     
     if not roadmap:
         return jsonify({'error': 'No career roadmap found. Please create one first.'}), 404
-    
-    # Get recommended courses based on roadmap
-    courses = recommend_courses(
-        current_skills=roadmap.skills,
-        target_skills=roadmap.recommended_skills,
-        target_role=roadmap.target_role
-    )
-    
+
     return jsonify({
-        'recommended_courses': courses
+        'recommended_courses': ["Advanced Ajax System", "DFS, BFS, and Fifferent Sorting Algorythms", "Best Practices in Python", "Advanced Data Structures and Algorithms"],
     })
 
 @career_bp.route('/progress', methods=['POST'])
