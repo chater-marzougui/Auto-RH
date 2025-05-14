@@ -97,9 +97,7 @@ class GeminiService:
             response_mime_type="application/json"
         )
 
-        response = self._make_request(prompt=prompt, parameters=parameters)
-        # print(f"request is done")
-        # print(f"here's the response : {response} ")
+        response = self._make_request(system_prompt+prompt, parameters)
         try:
             json_response = json.loads(response)
             # print(f"the json has been loaded successfully: {json_response}")

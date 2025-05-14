@@ -1,9 +1,9 @@
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSON
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from app import db
 
-db = SQLAlchemy()
 userIdStr = 'users.id'
 
 class User(db.Model):
@@ -17,7 +17,7 @@ class User(db.Model):
     role = db.Column(db.String(20), default='user', nullable=False)  # 'user', 'admin'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    profile_data = db.Column(JSONB, nullable=True)  # Stores skills, experience, education, etc.
+    profile_data = db.Column(JSON, nullable=True)  # Stores skills, experience, education, etc.
     
     # Relationships
     interviews = db.relationship('Interview', backref='user', lazy='dynamic')
@@ -75,7 +75,7 @@ class Enterprise(db.Model):
     size = db.Column(db.String(50), nullable=True)  # e.g., "1-10", "11-50", "51-200", "201-500", "501+"
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    custom_settings = db.Column(JSONB, nullable=True)  # Custom interview settings, preferences
+    custom_settings = db.Column(JSON, nullable=True)  # Custom interview settings, preferences
     
     # Relationships
     jobs = db.relationship('Job', backref='enterprise', lazy='dynamic')
@@ -107,7 +107,7 @@ class Job(db.Model):
     expires_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='active')  # 'active', 'closed', 'draft', 'archived'
     enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprises.id'), nullable=False)
-    interview_settings = db.Column(JSONB, nullable=True)  # Required questions, personality traits, etc.
+    interview_settings = db.Column(JSON, nullable=True)  # Required questions, personality traits, etc.
     
     # Relationships
     applications = db.relationship('Application', backref='job', lazy='dynamic')
@@ -131,7 +131,7 @@ class Application(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Additional data like extracted skills, etc.
-    application_data = db.Column(JSONB, nullable=True)
+    application_data = db.Column(JSON, nullable=True)
     
     def __repr__(self):
         return f'<Application {self.id} by User {self.user_id} for Job {self.job_id}>'
@@ -150,7 +150,7 @@ class Interview(db.Model):
     transcript = db.Column(db.Text, nullable=True)  # Full interview transcript
     summary = db.Column(db.Text, nullable=True)  # AI-generated summary
     score = db.Column(db.Float, nullable=True)  # Overall score
-    detailed_scores = db.Column(JSONB, nullable=True)  # Breakdown of scores by category
+    detailed_scores = db.Column(JSON, nullable=True)  # Breakdown of scores by category
     feedback = db.Column(db.Text, nullable=True)  # AI-generated feedback
     interview_type = db.Column(db.String(20), default='general')  # 'general', 'job_specific'
     status = db.Column(db.String(20), default='scheduled')  # 'scheduled', 'in_progress', 'completed', 'cancelled'
@@ -188,11 +188,11 @@ class CareerRoadmap(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(userIdStr), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    goals = db.Column(JSONB, nullable=True)  # Career goals
-    recommended_skills = db.Column(JSONB, nullable=True)  # Skills to develop
-    recommended_roles = db.Column(JSONB, nullable=True)  # Suitable job roles
-    recommended_courses = db.Column(JSONB, nullable=True)  # Courses to take
-    timeline = db.Column(JSONB, nullable=True)  # Timeline for skill development
+    goals = db.Column(JSON, nullable=True)  # Career goals
+    recommended_skills = db.Column(JSON, nullable=True)  # Skills to develop
+    recommended_roles = db.Column(JSON, nullable=True)  # Suitable job roles
+    recommended_courses = db.Column(JSON, nullable=True)  # Courses to take
+    timeline = db.Column(JSON, nullable=True)  # Timeline for skill development
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

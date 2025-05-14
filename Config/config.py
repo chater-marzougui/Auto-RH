@@ -1,9 +1,13 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
+gemini_api_key = os.getenv('GEMINI_API_KEY')
 
 class Config:
     """Base configuration class for Automated HR application."""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-replace-in-production'
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-replace-in-production')
     
     # Database configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \

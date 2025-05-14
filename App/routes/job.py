@@ -1,17 +1,23 @@
 from flask import Blueprint, request, jsonify, render_template, current_app, g
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.models import db, User, Job, Application, Enterprise, Interview
-from app.services.gemini_service import analyze_job_match
-from app.services.scoring_service import calculate_job_match_score
-from app.utils.recommender import recommend_jobs_for_user
-from app.utils.file_parser import extract_skills_from_cv
+import app.services.scoring_service as ss
+import app.utils.recommender as recommender
+from app.utils.file_parser import extract_skills_from_text, extract_text_from_pdf, parse_cv
 import os
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
 import uuid
+from app.services.gemini_service import GeminiService
+from dotenv import load_dotenv
 
+load_dotenv()
 job_bp = Blueprint('job', __name__, url_prefix='/jobs')
 appJsonStr = 'application/json'
+
+gemini_service = GeminiService(os.getenv('GEMINI_API_KEY'))
+scoring_service = ss.ScoringService()
+recommender_service = recommender.RecommenderSystem()
 
 @job_bp.route('/', methods=['GET'])
 def list_jobs():
@@ -99,8 +105,9 @@ def view_job(job_id):
             # Get match score if user has CV
             user = User.query.get(user_id)
             if user and user.cv_path:
-                user_skills = extract_skills_from_cv(user.cv_path)
-                user_match_score = calculate_job_match_score(user_skills, job.skills_required)
+                user_cv_text = extract_text_from_pdf(user.cv_path) if user.cv_path.endswith('.pdf') else user.cv_path
+                user_skills = extract_skills_from_text(user_cv_text)
+                user_match_score = scoring_service.calculate_job_match_score(user_skills, job.skills_required)
     except Exception:
         # Not logged in or token issues, continue as guest
         pass
@@ -337,10 +344,12 @@ def recommended_jobs():
     # Get user skills from CV if available
     user_skills = []
     if user.cv_path and os.path.exists(user.cv_path):
-        user_skills = extract_skills_from_cv(user.cv_path)
+        # Extract skills from CV
+        user_cv_text = extract_text_from_pdf(user.cv_path)
+        user_skills = extract_skills_from_text(user_cv_text)
     
     # Get recommended jobs
-    recommended = recommend_jobs_for_user(user_id, user_skills)
+    recommended = recommender_service.recommend_jobs_for_user(user_id, user_skills)
     
     # For API requests
     if request.headers.get('Accept') == appJsonStr:
@@ -368,18 +377,17 @@ def job_match_analysis(job_id):
         return jsonify({'error': 'Please upload your CV first to get a match analysis'}), 400
     
     # Extract skills from CV
-    user_skills = extract_skills_from_cv(user.cv_path)
+    user_cv = parse_cv(user.cv_path) if user.cv_path.endswith('.pdf') else user.cv_path
+    user_skills = extract_skills_from_text(user_cv["skills"])
     
     # Use Gemini to analyze the match
-    analysis = analyze_job_match(
-        user_skills=user_skills,
-        job_title=job.title,
-        job_description=job.description,
-        required_skills=job.skills_required
+    analysis = gemini_service.analyze_cv_for_job(
+        cv_data=user_cv,
+        job_description=job,
     )
     
     # Calculate match score
-    match_score = calculate_job_match_score(user_skills, job.skills_required)
+    match_score = scoring_service.calculate_job_match_score(user_skills, job.skills_required)
     
     response = {
         'match_score': match_score,

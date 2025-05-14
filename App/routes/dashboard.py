@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User, Interview, Application, CareerRoadmap, Enterprise, Job
-from app.services.scoring_service import get_user_assessment_summary
+import app.services.scoring_service as scoring_service
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app import db
@@ -64,7 +64,7 @@ def view_assessment(interview_id):
     questions = interview.questions.all()
     
     # Get assessment summary 
-    summary = get_user_assessment_summary(interview_id)
+    summary = scoring_service.generate_feedback_report(interview_id)
     
     return render_template('dashboard/assessment_detail.html',
                            interview=interview,
